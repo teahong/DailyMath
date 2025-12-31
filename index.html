@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찬재수학</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <!-- 전역 Spline 배경 -->
+    <div class="spline-container">
+        <iframe src='https://my.spline.design/platformerrabbitcopy-MmzSTWm486nN6JIwXisN00Xi/' frameborder='0'
+            width='100%' height='100%'></iframe>
+    </div>
+
+    <div class="app-container">
+        <!-- 사용자 선택 화면 -->
+        <section id="user-screen" class="screen active">
+            <h1 class="title">WHO IS<br><span>PLAYING?</span></h1>
+            <p class="subtitle">사용자를 선택해 주세요</p>
+
+            <div class="user-selection-container">
+                <button class="user-card" data-user="찬민">
+                    <div class="user-avatar">👦</div>
+                    <div class="user-name">찬민</div>
+                </button>
+                <button class="user-card" data-user="재민">
+                    <div class="user-avatar">👶</div>
+                    <div class="user-name">재민</div>
+                </button>
+            </div>
+
+            <button id="view-all-history-btn" class="secondary-btn" style="margin-top: 40px; width: 100%;">전체 기록
+                확인</button>
+        </section>
+
+        <!-- 시작 화면 -->
+        <section id="start-screen" class="screen">
+            <div class="user-badge" id="current-user-badge">찬민</div>
+            <h1 class="title" id="main-title">찬재를 위한 수학퀴즈<br><span>CHALLENGE</span></h1>
+            <p class="subtitle">난이도를 선택하여 도전을 시작하세요!</p>
+
+            <div class="difficulty-container">
+                <button class="diff-card easy" data-difficulty="easy">
+                    <div class="icon">🌱</div>
+                    <div class="label">Easy</div>
+                    <div id="desc-easy" class="desc">한자리수 × 한자리수</div>
+                </button>
+                <button class="diff-card normal" data-difficulty="normal">
+                    <div class="icon">🔥</div>
+                    <div class="label">Normal</div>
+                    <div id="desc-normal" class="desc">두자리수 × 한자리수</div>
+                </button>
+                <button class="diff-card hard" data-difficulty="hard">
+                    <div class="icon">💎</div>
+                    <div class="label">Hard</div>
+                    <div id="desc-hard" class="desc">두자리수 × 두자리수</div>
+                </button>
+            </div>
+
+            <div class="start-actions">
+                <button id="change-user-btn" class="secondary-btn">사용자 변경</button>
+            </div>
+        </section>
+
+        <!-- 게임 화면 -->
+        <section id="game-screen" class="screen">
+            <button id="game-back-btn" class="game-back-btn">←</button>
+            <div class="game-header">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="stats">
+                    <span id="question-number">1 / 10</span>
+                    <span id="current-score">Score: 0</span>
+                </div>
+            </div>
+
+            <div class="question-area">
+                <div id="question-text" class="question">12 × 5</div>
+                <div class="input-wrapper">
+                    <input type="number" id="answer-input" placeholder="정답 입력" autofocus>
+                    <div class="input-focus-line"></div>
+                </div>
+            </div>
+
+            <div class="feedback-msg" id="feedback-msg"></div>
+        </section>
+
+        <!-- 결과 화면 -->
+        <section id="result-screen" class="screen">
+            <div class="result-card">
+                <h2 id="result-title">도전 완료!</h2>
+                <div class="final-score" id="final-score">8 / 10</div>
+                <p id="result-comment">대단해요! 구구단 마스터가 되어보세요.</p>
+
+                <div class="result-actions">
+                    <button id="restart-btn" class="primary-btn">다시 하기</button>
+                    <button id="home-btn" class="secondary-btn">홈으로</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 기록 확인 화면 -->
+        <section id="history-screen" class="screen">
+            <div class="history-card">
+                <h2 class="history-title">누적 기록 확인</h2>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>난이도</th>
+                                <th>점수</th>
+                                <th>소요 시간</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-history-body">
+                            <!-- JS에서 동적으로 추가 -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="history-back-btn" class="primary-btn" style="margin-top: 20px; width: 100%;">뒤로 가기</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 배경 효과 (Spline과 조화를 위해 투명도 조정됨) -->
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
