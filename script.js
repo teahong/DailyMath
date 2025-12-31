@@ -40,6 +40,7 @@ const elements = {
     viewAllHistoryBtn: document.getElementById('view-all-history-btn'),
     historyBackBtn: document.getElementById('history-back-btn'),
     gameBackBtn: document.getElementById('game-back-btn'),
+    submitBtn: document.getElementById('submit-btn'),
     userBadge: document.getElementById('current-user-badge'),
     mainTitle: document.getElementById('main-title'),
     descEasy: document.getElementById('desc-easy'),
@@ -50,29 +51,59 @@ const elements = {
 // 오디오 컨텍스트 및 효과음 생성
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playSound(type) {
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+// 모바일 브라우저를 위한 오디오 컨텍스트 재개 함수
+function resumeAudioContext() {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+// 첫 사용자 상호작용 시 오디오 컨텍스트 활성화
+document.addEventListener('click', resumeAudioContext, { once: true });
+document.addEventListener('touchstart', resumeAudioContext, { once: true });
+document.addEventListener('keydown', resumeAudioContext, { once: true });
+
+function playSound(type) {
+    // 재생 전 컨텍스트 상태 확인 및 재개 시도
+    resumeAudioContext();
+
+    const now = audioCtx.currentTime;
 
     if (type === 'correct') {
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-        oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.1); // C6
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.2);
+        // 도(C5)와 미(E5)의 짧은 화음으로 기분 좋은 소리 생성
+        [523.25, 659.25].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + (i * 0.05));
+
+            gain.gain.setValueAtTime(0, now + (i * 0.05));
+            gain.gain.linearRampToValueAtTime(0.1, now + (i * 0.05) + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.05) + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + (i * 0.05));
+            osc.stop(now + (i * 0.05) + 0.3);
+        });
     } else if (type === 'wrong') {
-        oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
-        oscillator.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2); // A2
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.3);
+        // 낮은 주파수의 톱니파로 오답 소리 생성
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.3);
     }
 }
 
@@ -305,6 +336,12 @@ elements.diffCards.forEach(card => {
 
 elements.answerInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && elements.answerInput.value !== '') {
+        checkAnswer();
+    }
+});
+
+elements.submitBtn.addEventListener('click', () => {
+    if (elements.answerInput.value !== '') {
         checkAnswer();
     }
 });

@@ -262,11 +262,18 @@ body {
     text-shadow: 0 0 30px rgba(129, 140, 248, 0.5);
 }
 
+.input-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
 .input-wrapper {
     position: relative;
-    width: 100%;
-    max-width: 200px;
-    margin: 0 auto;
+    flex: 1;
 }
 
 #answer-input {
@@ -279,11 +286,34 @@ body {
     text-align: center;
     padding: 5px;
     outline: none;
-    transition: border-color 0.3s;
+    transition: all 0.3s;
 }
 
 #answer-input:focus {
     border-color: var(--primary);
+}
+
+.submit-btn {
+    background: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(129, 140, 248, 0.4);
+}
+
+.submit-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
 }
 
 /* 결과 화면 */
