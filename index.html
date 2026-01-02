@@ -22,6 +22,12 @@
     </div>
 
     <div class="app-container">
+        <!-- 로딩 스피너 -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>데이터 가져오는 중...</p>
+        </div>
+
         <!-- 사용자 선택 화면 -->
         <section id="user-screen" class="screen active">
             <h1 class="title">WHO IS<br><span>PLAYING?</span></h1>
@@ -67,6 +73,8 @@
             </div>
 
             <div class="start-actions">
+                <button id="view-history-from-start-btn" class="secondary-btn" style="margin-bottom: 10px;">기록
+                    확인</button>
                 <button id="change-user-btn" class="secondary-btn">사용자 변경</button>
             </div>
         </section>
@@ -103,10 +111,12 @@
             <div class="result-card">
                 <h2 id="result-title">도전 완료!</h2>
                 <div class="final-score" id="final-score">8 / 10</div>
+                <div class="final-time" id="final-time">소요 시간: 0분 0초</div>
                 <p id="result-comment">대단해요! 구구단 마스터가 되어보세요.</p>
 
                 <div class="result-actions">
                     <button id="restart-btn" class="primary-btn">다시 하기</button>
+                    <button id="view-history-from-result-btn" class="secondary-btn">전체 기록 확인</button>
                     <button id="home-btn" class="secondary-btn">홈으로</button>
                 </div>
             </div>
@@ -115,11 +125,18 @@
         <!-- 기록 확인 화면 -->
         <section id="history-screen" class="screen">
             <div class="history-card">
-                <h2 class="history-title">누적 기록 확인</h2>
+                <h2 class="history-title">순위 및 기록 확인</h2>
+
+                <div class="history-tabs">
+                    <button id="tab-recent" class="tab-btn active">최근 기록</button>
+                    <button id="tab-ranking" class="tab-btn">명예의 전당</button>
+                </div>
+
                 <div class="history-table-container">
                     <table class="history-table">
                         <thead>
                             <tr>
+                                <th>날짜</th>
                                 <th>이름</th>
                                 <th>난이도</th>
                                 <th>점수</th>

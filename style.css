@@ -12,6 +12,8 @@
     --easy-color: #34d399;
     --normal-color: #fbbf24;
     --hard-color: #f87171;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
 }
 
 * {
@@ -99,6 +101,7 @@ body {
     margin-bottom: 5px;
     background: linear-gradient(to bottom right, #fff, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
@@ -124,11 +127,11 @@ body {
 .diff-card,
 .result-card,
 .history-card {
-    background: var(--card-bg);
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 }
 
 .difficulty-container {
@@ -330,6 +333,12 @@ body {
     margin: 15px 0;
     color: var(--secondary);
     text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+}
+
+.final-time {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
 }
 
 .result-actions {
@@ -563,6 +572,7 @@ body {
     border-bottom: 2px solid var(--glass-border);
     color: var(--text-muted);
     font-size: clamp(0.7rem, 1.8vh, 0.85rem);
+    white-space: nowrap;
 }
 
 .history-table td {
@@ -571,8 +581,83 @@ body {
     font-size: clamp(0.7rem, 1.8vh, 0.8rem);
 }
 
-.history-table tr:last-child td {
-    border-bottom: none;
+/* 로딩 오버레이 */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 30px;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-top: 5px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 히스토리 탭 */
+.history-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 4px 15px rgba(129, 140, 248, 0.4);
+}
+
+.history-table th {
+    padding: 12px 8px;
+    border-bottom: 2px solid var(--glass-border);
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.history-table td {
+    padding: 12px 8px;
 }
 
 /* 세로 높이가 낮은 화면을 위한 대응 */

@@ -12,7 +12,9 @@ const state = {
     currentIndex: 0,
     score: 0,
     startTime: 0,
-    history: JSON.parse(localStorage.getItem('gugudan-history-v2') || '[]')
+    history: JSON.parse(localStorage.getItem('gugudan-history-v2') || '[]'),
+    prevScreen: 'user',
+    historyMode: 'recent' // 'recent' or 'ranking'
 };
 
 // DOM 요소
@@ -45,7 +47,13 @@ const elements = {
     mainTitle: document.getElementById('main-title'),
     descEasy: document.getElementById('desc-easy'),
     descNormal: document.getElementById('desc-normal'),
-    descHard: document.getElementById('desc-hard')
+    descHard: document.getElementById('desc-hard'),
+    finalTime: document.getElementById('final-time'),
+    viewHistoryStartBtn: document.getElementById('view-history-from-start-btn'),
+    viewHistoryResultBtn: document.getElementById('view-history-from-result-btn'),
+    loadingOverlay: document.getElementById('loading-overlay'),
+    tabRecent: document.getElementById('tab-recent'),
+    tabRanking: document.getElementById('tab-ranking')
 };
 
 // 오디오 컨텍스트 및 효과음 생성
@@ -122,10 +130,23 @@ function formatDuration(seconds) {
 function showScreen(screenName) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[screenName].classList.add('active');
-    state.screen = screenName;
+
+    // 이전 화면 기록 (통계 화면에서 돌아올 때 사용)
+    if (screenName !== 'history') {
+        state.prevScreen = screenName;
+    }
 
     if (screenName === 'game') {
         setTimeout(() => elements.answerInput.focus(), 100);
+    }
+}
+
+// 로딩 표시 관리
+function setLoading(isLoading) {
+    if (isLoading) {
+        elements.loadingOverlay.classList.add('active');
+    } else {
+        elements.loadingOverlay.classList.remove('active');
     }
 }
 
@@ -257,10 +278,12 @@ function checkAnswer() {
 
 // 게임 종료
 async function endGame() {
-    elements.finalScore.textContent = `${state.score} / 10`;
-
     const endTime = Date.now();
     const duration = Math.floor((endTime - state.startTime) / 1000);
+    const formattedDuration = formatDuration(duration);
+
+    elements.finalScore.textContent = `${state.score} / 10`;
+    elements.finalTime.textContent = `소요 시간: ${formattedDuration}`;
 
     // 1. Supabase에 저장할 데이터 객체 만들기 (DB 컬럼명과 일치해야 함)
     const resultForDB = {
@@ -295,30 +318,70 @@ async function endGame() {
     showScreen('result');
 }
 
-// 전체 기록 UI 업데이트
+// 전체 기록 및 랭킹 UI 업데이트
 async function updateFullHistoryUI() {
-    // 1. Supabase에서 최신 기록 20개 가져오기
-    // created_at 기준으로 내림차순(최신순) 정렬합니다.
-    const { data: results, error } = await supabaseClient
-        .from('quiz_results')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
+    setLoading(true);
+
+    let results, error;
+
+    if (state.historyMode === 'recent') {
+        // 최신 기록 20개 가져오기
+        const response = await supabaseClient
+            .from('quiz_results')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+        results = response.data;
+        error = response.error;
+    } else {
+        // 명예의 전당 (점수 DESC, 소요시간 ASC)
+        // 같은 점수라면 더 빨리 푼 사람이 상위
+        const response = await supabaseClient
+            .from('quiz_results')
+            .select('*')
+            .order('score', { ascending: false })
+            .order('duration', { ascending: true })
+            .limit(20);
+        results = response.data;
+        error = response.error;
+    }
+
+    setLoading(false);
 
     if (error) {
         console.error('기록 로드 실패:', error.message);
+        elements.fullHistoryBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">기록을 로드할 수 없습니다.</td></tr>`;
         return;
     }
 
-    // 2. UI 업데이트 (DB 컬럼명인 user_name을 사용해야 함에 주의!)
-    elements.fullHistoryBody.innerHTML = results.map(h => `
-        <tr>
-            <td>${h.user_name}</td> 
-            <td>${h.difficulty}</td>
-            <td>${h.score} / 10</td>
-            <td>${formatDuration(h.duration)}</td>
-        </tr>
-    `).join('');
+    if (!results || results.length === 0) {
+        elements.fullHistoryBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">기록이 없습니다. 첫 주인공이 되어보세요!</td></tr>`;
+        return;
+    }
+
+    elements.fullHistoryBody.innerHTML = results.map((h, index) => {
+        const dateObj = new Date(h.created_at);
+        const dateStr = `${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+        // 랭킹 모드일 때 메달 표시
+        let rankPrefix = '';
+        if (state.historyMode === 'ranking') {
+            if (index === 0) rankPrefix = '🥇 ';
+            else if (index === 1) rankPrefix = '🥈 ';
+            else if (index === 2) rankPrefix = '🥉 ';
+            else rankPrefix = `${index + 1}. `;
+        }
+
+        return `
+            <tr>
+                <td>${state.historyMode === 'recent' ? dateStr : rankPrefix}</td>
+                <td style="font-weight:700;">${h.user_name}</td> 
+                <td>${h.difficulty}</td>
+                <td style="color:var(--secondary); font-weight:700;">${h.score} / 10</td>
+                <td>${formatDuration(h.duration)}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // 이벤트 리스너
@@ -363,14 +426,39 @@ elements.viewAllHistoryBtn.addEventListener('click', () => {
     showScreen('history');
 });
 
+elements.viewHistoryStartBtn.addEventListener('click', () => {
+    updateFullHistoryUI();
+    showScreen('history');
+});
+
+elements.viewHistoryResultBtn.addEventListener('click', () => {
+    updateFullHistoryUI();
+    showScreen('history');
+});
+
 elements.historyBackBtn.addEventListener('click', () => {
-    showScreen('user');
+    showScreen(state.prevScreen || 'user');
 });
 
 elements.gameBackBtn.addEventListener('click', () => {
     if (confirm('게임을 중단하고 나가시겠습니까?')) {
         showScreen('start');
     }
+});
+
+// 탭 전환 이벤트
+elements.tabRecent.addEventListener('click', () => {
+    state.historyMode = 'recent';
+    elements.tabRecent.classList.add('active');
+    elements.tabRanking.classList.remove('active');
+    updateFullHistoryUI();
+});
+
+elements.tabRanking.addEventListener('click', () => {
+    state.historyMode = 'ranking';
+    elements.tabRanking.classList.add('active');
+    elements.tabRecent.classList.remove('active');
+    updateFullHistoryUI();
 });
 
 // 초기화
