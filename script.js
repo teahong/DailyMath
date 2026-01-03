@@ -14,7 +14,11 @@ const state = {
     startTime: 0,
     history: JSON.parse(localStorage.getItem('gugudan-history-v2') || '[]'),
     prevScreen: 'user',
-    historyMode: 'recent' // 'recent' or 'ranking'
+    historyMode: 'recent', // 'recent' or 'ranking'
+    filterUser: 'all',
+    filterDiff: 'all',
+    sortConfig: { column: 'created_at', ascending: false },
+    viewGlobal: false
 };
 
 // DOM 요소
@@ -53,7 +57,11 @@ const elements = {
     viewHistoryResultBtn: document.getElementById('view-history-from-result-btn'),
     loadingOverlay: document.getElementById('loading-overlay'),
     tabRecent: document.getElementById('tab-recent'),
-    tabRanking: document.getElementById('tab-ranking')
+    tabRanking: document.getElementById('tab-ranking'),
+    filterUser: document.getElementById('filter-user'),
+    filterDiff: document.getElementById('filter-diff'),
+    historyHeaders: document.querySelectorAll('.sortable-header'),
+    firstColHeader: document.getElementById('history-first-col-header')
 };
 
 // 오디오 컨텍스트 및 효과음 생성
@@ -320,31 +328,48 @@ async function endGame() {
 
 // 전체 기록 및 랭킹 UI 업데이트
 async function updateFullHistoryUI() {
+    // viewGlobal 모드가 아닐 때만 사용자 체크
+    if (!state.viewGlobal && !state.currentUser) {
+        elements.fullHistoryBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">사용자를 선택해 주세요.</td></tr>`;
+        return;
+    }
+
     setLoading(true);
 
-    let results, error;
+    // 헤더 텍스트 변경
+    elements.firstColHeader.textContent = state.historyMode === 'recent' ? '날짜' : '순위';
 
-    if (state.historyMode === 'recent') {
-        // 최신 기록 20개 가져오기
-        const response = await supabaseClient
-            .from('quiz_results')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(20);
-        results = response.data;
-        error = response.error;
+    let query = supabaseClient
+        .from('quiz_results')
+        .select('*');
+
+    // 필터 적용
+    if (!state.viewGlobal) {
+        // 특정 사용자 화면에서 진입한 경우 해당 사용자만
+        query = query.eq('user_name', state.currentUser);
+        // 필터 UI도 해당 사용자로 고정 (시각적 일관성)
+        elements.filterUser.value = state.currentUser;
+        elements.filterUser.disabled = true;
     } else {
-        // 명예의 전당 (점수 DESC, 소요시간 ASC)
-        // 같은 점수라면 더 빨리 푼 사람이 상위
-        const response = await supabaseClient
-            .from('quiz_results')
-            .select('*')
-            .order('score', { ascending: false })
-            .order('duration', { ascending: true })
-            .limit(20);
-        results = response.data;
-        error = response.error;
+        elements.filterUser.disabled = false;
+        if (state.filterUser !== 'all') {
+            query = query.eq('user_name', state.filterUser);
+        }
     }
+
+    if (state.filterDiff !== 'all') {
+        query = query.eq('difficulty', state.filterDiff);
+    }
+
+    // 정렬 적용
+    if (state.historyMode === 'recent') {
+        query = query.order(state.sortConfig.column, { ascending: state.sortConfig.ascending });
+    } else {
+        // 명예의 전당 기본 정렬
+        query = query.order('score', { ascending: false }).order('duration', { ascending: true });
+    }
+
+    const { data: results, error } = await query.limit(30);
 
     setLoading(false);
 
@@ -355,7 +380,8 @@ async function updateFullHistoryUI() {
     }
 
     if (!results || results.length === 0) {
-        elements.fullHistoryBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">기록이 없습니다. 첫 주인공이 되어보세요!</td></tr>`;
+        const msg = state.viewGlobal ? '해당하는 기록이 없습니다.' : `${state.currentUser}님의 기록이 없습니다. 도전을 시작해보세요!`;
+        elements.fullHistoryBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">${msg}</td></tr>`;
         return;
     }
 
@@ -422,16 +448,23 @@ elements.changeUserBtn.addEventListener('click', () => {
 });
 
 elements.viewAllHistoryBtn.addEventListener('click', () => {
+    state.viewGlobal = true;
+    state.filterUser = 'all';
+    state.filterDiff = 'all';
+    elements.filterUser.value = 'all';
+    elements.filterDiff.value = 'all';
     updateFullHistoryUI();
     showScreen('history');
 });
 
 elements.viewHistoryStartBtn.addEventListener('click', () => {
+    state.viewGlobal = false;
     updateFullHistoryUI();
     showScreen('history');
 });
 
 elements.viewHistoryResultBtn.addEventListener('click', () => {
+    state.viewGlobal = false;
     updateFullHistoryUI();
     showScreen('history');
 });
@@ -459,6 +492,38 @@ elements.tabRanking.addEventListener('click', () => {
     elements.tabRanking.classList.add('active');
     elements.tabRecent.classList.remove('active');
     updateFullHistoryUI();
+});
+
+// 필터 변경 이벤트
+elements.filterUser.addEventListener('change', (e) => {
+    state.filterUser = e.target.value;
+    updateFullHistoryUI();
+});
+
+elements.filterDiff.addEventListener('change', (e) => {
+    state.filterDiff = e.target.value;
+    updateFullHistoryUI();
+});
+
+// 헤더 정렬 이벤트
+elements.historyHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+        const column = header.dataset.sort;
+        if (state.sortConfig.column === column) {
+            state.sortConfig.ascending = !state.sortConfig.ascending;
+        } else {
+            state.sortConfig.column = column;
+            state.sortConfig.ascending = true;
+        }
+
+        // UI 업데이트 (화살표 표시)
+        elements.historyHeaders.forEach(h => {
+            h.classList.remove('asc', 'desc');
+        });
+        header.classList.add(state.sortConfig.ascending ? 'asc' : 'desc');
+
+        updateFullHistoryUI();
+    });
 });
 
 // 초기화

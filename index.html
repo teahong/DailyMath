@@ -132,13 +132,33 @@
                     <button id="tab-ranking" class="tab-btn">명예의 전당</button>
                 </div>
 
+                <div class="history-filters">
+                    <div class="filter-group">
+                        <label for="filter-user">사용자:</label>
+                        <select id="filter-user">
+                            <option value="all">전체</option>
+                            <option value="찬민">찬민</option>
+                            <option value="재민">재민</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-diff">난이도:</label>
+                        <select id="filter-diff">
+                            <option value="all">전체</option>
+                            <option value="easy">Easy</option>
+                            <option value="normal">Normal</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="history-table-container">
                     <table class="history-table">
                         <thead>
                             <tr>
-                                <th>날짜</th>
-                                <th>이름</th>
-                                <th>난이도</th>
+                                <th id="history-first-col-header">날짜</th>
+                                <th class="sortable-header" data-sort="user_name">이름</th>
+                                <th class="sortable-header" data-sort="difficulty">난이도</th>
                                 <th>점수</th>
                                 <th>소요 시간</th>
                             </tr>
