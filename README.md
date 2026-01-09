@@ -32,9 +32,5 @@
 2. `index.html` 파일을 브라우저에서 엽니다.
 3. Supabase 연동이 필요한 경우 `script.js`의 `SUPABASE_URL`과 `SUPABASE_ANON_KEY`를 설정하세요.
 
----
 
-## 📄 라이선스 (License)
-
-이 프로젝트는 MIT 라이선스를 따릅니다.
 
