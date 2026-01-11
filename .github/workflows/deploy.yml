@@ -23,9 +23,9 @@ jobs:
 
       - name: Generate config.js from template
         run: |
-          sed -e "s|%%SUPABASE_URL%%|${{ secrets.SUPABASE_URL }}|g" \
-              -e "s|%%SUPABASE_ANON_KEY%%|${{ secrets.SUPABASE_ANON_KEY }}|g" \
-              config.template.js > config.js
+          cat config.template.js | \
+            sed "s#%%SUPABASE_URL%%#${{ secrets.SUPABASE_URL }}#g" | \
+            sed "s#%%SUPABASE_ANON_KEY%%#${{ secrets.SUPABASE_ANON_KEY }}#g" > config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
