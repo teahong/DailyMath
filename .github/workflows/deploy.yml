@@ -21,11 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate config.js from template
+      - name: Generate config.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          cat config.template.js | \
-            sed "s#%%SUPABASE_URL%%#${{ secrets.SUPABASE_URL }}#g" | \
-            sed "s#%%SUPABASE_ANON_KEY%%#${{ secrets.SUPABASE_ANON_KEY }}#g" > config.js
+          echo "const SUPABASE_CONFIG = {" > config.js
+          echo "    url: '$SUPABASE_URL'," >> config.js
+          echo "    anonKey: '$SUPABASE_ANON_KEY'" >> config.js
+          echo "};" >> config.js
+          
+          # 파일이 제대로 생성되었는지 확인 (보안을 위해 내용은 출력하지 않음)
+          ls -l config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
