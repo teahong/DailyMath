@@ -22,16 +22,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate config.js
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
         run: |
-          echo "const SUPABASE_CONFIG = {" > config.js
-          echo "    url: '$SUPABASE_URL'," >> config.js
-          echo "    anonKey: '$SUPABASE_ANON_KEY'" >> config.js
-          echo "};" >> config.js
-          
-          # 파일이 제대로 생성되었는지 확인 (보안을 위해 내용은 출력하지 않음)
+          cat <<EOF > config.js
+          const SUPABASE_CONFIG = {
+              url: "${{ secrets.SUPABASE_URL }}",
+              anonKey: "${{ secrets.SUPABASE_ANON_KEY }}"
+          };
+          EOF
           ls -l config.js
 
       - name: Setup Pages
