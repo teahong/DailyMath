@@ -1,7 +1,5 @@
-// Supabase 연결 설정
-const SUPABASE_URL = 'https://hsoktyzjmqqpitqjoasx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhzb2t0eXpqbXFxcGl0cWpvYXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTE3MTIsImV4cCI6MjA4Mjc2NzcxMn0.x6kRqsXsoI7qhZYnshTbGoqavh2IMmRZMainTQ89pWI';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Supabase 연결 설정 (config.js에서 로드)
+const supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
 
 // 게임 상태 관리
 const state = {
